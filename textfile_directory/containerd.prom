@@ -1,0 +1,3 @@
+# HELP get containerd_status from shell
+# TYPE containerd_status gauge
+shell_containerd_status 1
