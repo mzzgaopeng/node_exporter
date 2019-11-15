@@ -71,8 +71,6 @@ func execCommand(command string) ([]byte, error) {
 		return nil, err
 	}
 
-	// If there's no context error, we know the command completed (or errored).
-	fmt.Println("Output:", string(out))
 	if err != nil {
 		fmt.Println("Non-zero exit code:", err)
 	}
