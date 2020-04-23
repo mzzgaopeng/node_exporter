@@ -19,12 +19,17 @@ import (
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"os/exec"
 )
 
 const (
 	OSSCheckInfo = "check_oss_status"
 	OSSIPInfo    = "check_oss_ip"
+)
+
+var (
+	ossCNAME = kingpin.Flag("collector.oss.cname", "OSS sname to use for oss collector").Default("oss-cn-luoyang-onlinestor-d01-a.res.online.stor").String()
 )
 
 type OSSCheckCollector struct{}
@@ -43,10 +48,11 @@ func NewOSSCheckCollector() (Collector, error) {
 // Update calls update osscheck
 func (c *OSSCheckCollector) Update(ch chan<- prometheus.Metric) error {
 	ossStatus := 0
+	httpcname := "http://" + string(*ossCNAME)
 
 	//osscheck by yourself
-	out, err := exec.Command("/bin/bash", "-c", "curl -s -o /dev/null -w '%{http_code}' http://oss-cn-luoyang-onlinestor-d01-a.res.online.stor --connect-timeout 1 -m 2").Output()
-
+	execosscheck := "curl -s -o /dev/null -w '%{http_code}' " + httpcname + " --connect-timeout 1 -m 2"
+	out, err := exec.Command("/bin/bash", "-c", execosscheck).Output()
 	if err != nil {
 		log.Debugf("Get oss check faile: %q", err)
 	}
@@ -66,7 +72,8 @@ func (c *OSSCheckCollector) Update(ch chan<- prometheus.Metric) error {
 
 	var ossIP string = "0.0.0.0"
 	//osscheck by yourself
-	outIP, errIP := exec.Command("/bin/bash", "-c", "ping oss-cn-luoyang-onlinestor-d01-a.res.online.stor -c 1 -W 1|head -1|awk '{print $3}'|tr -d '(|)|\n'").Output()
+	execossip := "ping " + *ossCNAME + " -c 1 -W 1|head -1|awk '{print $3}'|tr -d '(|)|\n'"
+	outIP, errIP := exec.Command("/bin/bash", "-c", execossip).Output()
 
 	if errIP != nil {
 		log.Debugf("Get oss IP faile: %q", errIP)
@@ -79,7 +86,6 @@ func (c *OSSCheckCollector) Update(ch chan<- prometheus.Metric) error {
 		ossIP = "0.0.0.0"
 	}
 
-	fmt.Println("debug ossIP: ", ossIP)
 	ch <- prometheus.MustNewConstMetric(
 		prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, OSSIPInfo, "ossip"),
