@@ -51,7 +51,7 @@ func (c *OSSCheckCollector) Update(ch chan<- prometheus.Metric) error {
 	httpcname := "http://" + string(*ossCNAME)
 
 	//osscheck by yourself
-	execosscheck := "curl -s -o /dev/null -w '%{http_code}' " + httpcname + " --connect-timeout 1 -m 2"
+	execosscheck := "curl -s -o /dev/null -w '%{http_code}' " + httpcname + " --connect-timeout 3 -m 5"
 	out, err := exec.Command("/bin/bash", "-c", execosscheck).Output()
 	if err != nil {
 		log.Debugf("Get oss check faile: %q", err)
