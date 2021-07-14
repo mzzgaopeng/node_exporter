@@ -1,17 +1,15 @@
 package collector
 
 import (
-	"context"
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"os/exec"
 	"strconv"
-	"time"
 )
 
 const (
-	tunl0PortInfo = "tunl0_port_count"
+	tunl0PortInfo = "tunl0_port"
 )
 
 type newTunl0PortCollector struct {}
@@ -24,7 +22,7 @@ func NewTunl0PortCollector() (Collector, error) {
 	return &newTunl0PortCollector{}, nil
 }
 
-func execShell(command string) ([]byte, error) {
+/*func execShell(command string) ([]byte, error) {
 	// Create a new context and add a timeout to it
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel() // The cancel should be deferred so resources are cleaned up
@@ -47,15 +45,17 @@ func execShell(command string) ([]byte, error) {
 	}
 
 	return out, err
-}
+}*/
 
 func (c *newTunl0PortCollector) Update(ch chan<- prometheus.Metric) error {
-	ip, err := execShell("ifconfig tunl0 |grep inet|awk '{print $2}'")
+	//ip, err := execShell("ifconfig tunl0 |grep inet|awk '{print $2}'")
+	ip, err := exec.Command("/bin/bash", "-c", "ifconfig tunl0 |grep inet|awk '{print $2}'").Output()
 	if err != nil {
 		log.Debugf("Get tunl0 IP fail: %q", err)
 	}
-
-	count, err := execShell("netstat -anop |grep " + string(ip) + " |grep ESTABLISHED|wc -l")
+	fmt.Println(string(ip))
+	shell := "netstat -anop |grep " + string(ip) + " |grep ESTABLISHED|wc -l"
+	count, err := exec.Command("/bin/bash", "-c", shell).Output()
 	countPort, _ := strconv.Atoi(string(count))
 	if err != nil {
 		log.Debugf("Get tunl0 port count fail: %q", err)
