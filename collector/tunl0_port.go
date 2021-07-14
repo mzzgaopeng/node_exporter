@@ -64,7 +64,7 @@ func (c *newTunl0PortCollector) Update(ch chan<- prometheus.Metric) error {
 		prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, tunl0PortInfo, "count"),
 			fmt.Sprintf("tunl0 port count"),
-			[]string{"portCount"}, nil,
+			nil, nil,
 		),
 		prometheus.CounterValue, float64(countPort),
 	)
