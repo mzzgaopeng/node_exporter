@@ -36,7 +36,6 @@ type OSSCheckCollector struct{}
 
 func init() {
 	registerCollector("oss", defaultDisabled, NewOSSCheckCollector)
-
 }
 
 // NewContainerdCollector returns a new Collector.
