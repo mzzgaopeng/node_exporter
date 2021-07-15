@@ -6,6 +6,7 @@ import (
 	"github.com/prometheus/common/log"
 	"os/exec"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -53,13 +54,14 @@ func (c *newTunl0PortCollector) Update(ch chan<- prometheus.Metric) error {
 	if err != nil {
 		log.Debugf("Get tunl0 IP fail: %q", err)
 	}
-	fmt.Println(string(ip))
-	shell := "netstat -anop |grep " + string(ip) + " |grep ESTABLISHED|wc -l"
+	ipStr := strings.Replace(string(ip), "\n", "", -1)
+	shell := "netstat -anop |grep " + ipStr + " |grep ESTABLISHED|wc -l"
 	count, err := exec.Command("/bin/bash", "-c", shell).Output()
-	countPort, _ := strconv.Atoi(string(count))
 	if err != nil {
 		log.Debugf("Get tunl0 port count fail: %q", err)
 	}
+	countStr := strings.Replace(string(count), "\n", "", -1)
+	countPort, _ := strconv.Atoi(string(countStr))
 	ch <- prometheus.MustNewConstMetric(
 		prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, tunl0PortInfo, "count"),
