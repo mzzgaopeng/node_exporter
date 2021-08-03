@@ -55,10 +55,11 @@ func (c *newTunl0PortCollector) Update(ch chan<- prometheus.Metric) error {
 	if err != nil {
 		log.Debugf("Get tunl0 IP fail: %q", err)
 	}
-	if ip != nil {
-		ipStr := strings.Replace(string(ip), "\n", "", -1)
-		println(ipStr)
-		shell := "netstat -anp |grep " + ipStr + " |grep ESTABLISHED|wc -l"
+	ipStr := strings.Replace(string(ip), "\n", "", -1)
+	if len(ipStr) < 7 {
+		bondIP, err := exec.Command("/bin/bash", "-c", "ifconfig bond0 |grep inet|awk '{print $2}'").Output()
+		bondIPStr := strings.Replace(string(bondIP), "\n", "", -1)
+		shell := "netstat -anp |grep " + bondIPStr + " |grep ESTABLISHED|grep -E '172.23|172.24'|wc -l"
 		count, err := exec.Command("/bin/bash", "-c", shell).Output()
 		if err != nil {
 			log.Debugf("Get tunl0 port count fail: %q", err)
@@ -66,9 +67,7 @@ func (c *newTunl0PortCollector) Update(ch chan<- prometheus.Metric) error {
 		countStr := strings.Replace(string(count), "\n", "", -1)
 		countPort, _ = strconv.Atoi(string(countStr))
 	} else {
-		bondIP, err := exec.Command("/bin/bash", "-c", "ifconfig bond0 |grep inet|awk '{print $2}'").Output()
-		bondIPStr := strings.Replace(string(bondIP), "\n", "", -1)
-		shell := "netstat -anp |grep " + bondIPStr + " |grep ESTABLISHED|grep -E '172.23|172.24'|wc -l"
+		shell := "netstat -anp |grep " + ipStr + " |grep ESTABLISHED|wc -l"
 		count, err := exec.Command("/bin/bash", "-c", shell).Output()
 		if err != nil {
 			log.Debugf("Get tunl0 port count fail: %q", err)
