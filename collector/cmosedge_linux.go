@@ -23,7 +23,7 @@ type edgeCollector struct {
 }
 
 func init() {
-	registerCollector("cmosedge", defaultEnabled, NewEdgeCollector)
+	registerCollector("cmosedge", defaultDisabled, NewEdgeCollector)
 }
 
 func NewEdgeCollector() (Collector, error) {
