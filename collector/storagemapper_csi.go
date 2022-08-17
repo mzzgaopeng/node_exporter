@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	storageCsiInfo = "storage_csi_status"
+	storageCsiInfo = "storage_csi_mapper"
 )
 
 type newStorageCsiCollector struct{}
@@ -29,7 +29,12 @@ func updateStorageCsiMapper(mapperList []string, mapper *map[string]string) {
 		if strings.Contains(mapperItem, "kubernetes.io~csi") == true && mapperItem != "" {
 			mapperKV := strings.Split(mapperItem, "__")
 			key := mapperKV[0]
-			value := mapperKV[1]
+			value := "null"
+			for _, path := range strings.Split(mapperKV[1], " ") {
+				if strings.Contains(path, "kubernetes.io~csi") {
+					value = path
+				}
+			}
 			(*mapper)[key] = value
 		}
 	}
@@ -73,7 +78,7 @@ func (c *newStorageCsiCollector) Update(ch chan<- prometheus.Metric) error {
 	for mapperPodInfo, storagePath := range mapper {
 		ch <- prometheus.MustNewConstMetric(
 			prometheus.NewDesc(
-				prometheus.BuildFQName(namespace, storageCsiInfo, "CsiMapper"),
+				prometheus.BuildFQName(namespace, storageCsiInfo, "info"),
 				fmt.Sprintf("csi mapper information"),
 				[]string{"storagePath", "csiPodInfo"}, nil,
 			),

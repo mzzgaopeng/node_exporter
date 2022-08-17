@@ -13,7 +13,7 @@ const (
 	tunl0PortInfo = "tunl0_port"
 )
 
-type newTunl0PortCollector struct {}
+type newTunl0PortCollector struct{}
 
 func init() {
 	registerCollector("tunl0port", defaultDisabled, NewTunl0PortCollector)
