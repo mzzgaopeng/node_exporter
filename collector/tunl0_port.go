@@ -16,7 +16,7 @@ const (
 type newTunl0PortCollector struct {}
 
 func init() {
-	registerCollector("tunl0port", true, NewTunl0PortCollector)
+	registerCollector("tunl0port", defaultDisabled, NewTunl0PortCollector)
 }
 
 func NewTunl0PortCollector() (Collector, error) {
