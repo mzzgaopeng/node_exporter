@@ -17,25 +17,32 @@
 package collector
 
 import (
+	"context"
 	"fmt"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-var (
-	nginxPort = kingpin.Flag("collector.nginx.port", "Ingress nginx stub_status collector").Default("").String()
-)
-
 type nginxStatusCollector struct{}
+
+var dockerclient client.APIClient
+
+func createcli() {
+	var err error
+	dockerclient, err = client.NewClientWithOpts()
+	if err != nil {
+		panic(err)
+	}
+}
 
 func init() {
 	registerCollector("nginx-status", defaultDisabled, NginxCheckCollector)
-
 }
 
 // NewContainerdCollector returns a new Collector.
@@ -45,8 +52,27 @@ func NginxCheckCollector() (Collector, error) {
 }
 
 func (c *nginxStatusCollector) Update(ch chan<- prometheus.Metric) error {
-	nginxports := strings.Split(*nginxPort, ",")
-	for _, httpport := range nginxports {
+	createcli()
+	containers, err := dockerclient.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		panic(err)
+	}
+	nginxmap := make(map[string]string)
+
+	for _, container := range containers {
+		log.Infof("containersid  is %s", container.Names)
+		for _, containername := range container.Names {
+			if strings.Contains(containername, "ingress-controller") && !strings.HasPrefix(containername, "/k8s_POD") {
+				log.Infof("container ingress containerid is %s", container.ID)
+				log.Infof(container.Command)
+				split := strings.Fields(container.Command)
+				podname := container.Labels["io.kubernetes.pod.name"]
+				nginxmap[podname] = strings.TrimLeft(split[3], "--http-port=")
+			}
+		}
+	}
+	//nginxports := strings.Split(*nginxPort, ",")
+	for containername, httpport := range nginxmap {
 		httpurl := "http://127.0.0.1:" + httpport + "/nginx_status"
 		rep, err := http.Get(httpurl)
 		if err != nil {
@@ -81,34 +107,34 @@ func (c *nginxStatusCollector) Update(ch chan<- prometheus.Metric) error {
 			prometheus.NewDesc(
 				prometheus.BuildFQName(namespace, "nginx_status", "nginx_active"),
 				fmt.Sprintf("nginx_active information field %s.", "active"),
-				[]string{"httpport"}, nil,
+				[]string{"podname", "httpport"}, nil,
 			),
-			prometheus.GaugeValue, float64(activemetrics), httpport,
+			prometheus.GaugeValue, float64(activemetrics), containername, httpport,
 		)
 		//server metrics
 		ch <- prometheus.MustNewConstMetric(
 			prometheus.NewDesc(
 				prometheus.BuildFQName(namespace, "nginx_status", "accept"),
 				fmt.Sprintf("accept information field %s.", "accept"),
-				[]string{"httpport"}, nil,
+				[]string{"podname", "httpport"}, nil,
 			),
-			prometheus.CounterValue, float64(accept), httpport,
+			prometheus.CounterValue, float64(accept), containername, httpport,
 		)
 		ch <- prometheus.MustNewConstMetric(
 			prometheus.NewDesc(
 				prometheus.BuildFQName(namespace, "nginx_status", "handled"),
 				fmt.Sprintf("handled information field %s.", "handled"),
-				[]string{"httpport"}, nil,
+				[]string{"podname", "httpport"}, nil,
 			),
-			prometheus.CounterValue, float64(handled), httpport,
+			prometheus.CounterValue, float64(handled), containername, httpport,
 		)
 		ch <- prometheus.MustNewConstMetric(
 			prometheus.NewDesc(
 				prometheus.BuildFQName(namespace, "nginx_status", "requests"),
 				fmt.Sprintf("requests information field %s.", "requests"),
-				[]string{"httpport"}, nil,
+				[]string{"podname", "httpport"}, nil,
 			),
-			prometheus.CounterValue, float64(requests), httpport,
+			prometheus.CounterValue, float64(requests), containername, httpport,
 		)
 
 		// RWW
@@ -116,25 +142,25 @@ func (c *nginxStatusCollector) Update(ch chan<- prometheus.Metric) error {
 			prometheus.NewDesc(
 				prometheus.BuildFQName(namespace, "nginx_status", "reading"),
 				fmt.Sprintf("requests information field %s.", "reading"),
-				[]string{"httpport"}, nil,
+				[]string{"podname", "httpport"}, nil,
 			),
-			prometheus.GaugeValue, float64(reading), httpport,
+			prometheus.GaugeValue, float64(reading), containername, httpport,
 		)
 		ch <- prometheus.MustNewConstMetric(
 			prometheus.NewDesc(
 				prometheus.BuildFQName(namespace, "nginx_status", "writing"),
 				fmt.Sprintf("requests information field %s.", "writing"),
-				[]string{"httpport"}, nil,
+				[]string{"podname", "httpport"}, nil,
 			),
-			prometheus.GaugeValue, float64(writing), httpport,
+			prometheus.GaugeValue, float64(writing), containername, httpport,
 		)
 		ch <- prometheus.MustNewConstMetric(
 			prometheus.NewDesc(
 				prometheus.BuildFQName(namespace, "nginx_status", "waiting"),
 				fmt.Sprintf("requests information field %s.", "waiting"),
-				[]string{"httpport"}, nil,
+				[]string{"podname", "httpport"}, nil,
 			),
-			prometheus.GaugeValue, float64(waiting), httpport,
+			prometheus.GaugeValue, float64(waiting), containername, httpport,
 		)
 
 	}
