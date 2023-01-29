@@ -63,8 +63,8 @@ func (c *nginxStatusCollector) Update(ch chan<- prometheus.Metric) error {
 		log.Infof("containersid  is %s", container.Names)
 		for _, containername := range container.Names {
 			if strings.Contains(containername, "ingress-controller") && !strings.HasPrefix(containername, "/k8s_POD") {
-				log.Infof("container ingress containerid is %s", container.ID)
-				log.Infof(container.Command)
+				log.Debugf("container ingress containerid is %s", container.ID)
+				log.Debugf(container.Command)
 				split := strings.Fields(container.Command)
 				podname := container.Labels["io.kubernetes.pod.name"]
 				nginxmap[podname] = strings.TrimLeft(split[3], "--http-port=")
