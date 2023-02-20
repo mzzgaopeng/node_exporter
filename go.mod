@@ -13,7 +13,7 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/ema/qdisc v0.0.0-20180104102928-b307c22d3ce7
 	github.com/godbus/dbus v4.1.0+incompatible
-	github.com/gogo/protobuf v1.1.1 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.2.0 // indirect
 	github.com/lufia/iostat v0.0.0-20170605150913-9f7362b77ad3
 	github.com/mattn/go-xmlrpc v0.0.0-20180913190254-6e944673e4c0
