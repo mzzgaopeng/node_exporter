@@ -57,7 +57,7 @@ func (c *nginxStatusCollector) Update(ch chan<- prometheus.Metric) error {
 	if err != nil {
 		panic(err)
 	}
-	dockerclient.Close()
+	defer dockerclient.Close()
 	nginxmap := make(map[string]string)
 
 	for _, container := range containers {
