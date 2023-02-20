@@ -45,7 +45,7 @@ github.com/docker/go-units
 github.com/ema/qdisc
 # github.com/godbus/dbus v4.1.0+incompatible
 github.com/godbus/dbus
-# github.com/gogo/protobuf v1.1.1
+# github.com/gogo/protobuf v1.3.2
 github.com/gogo/protobuf/proto
 # github.com/golang/protobuf v1.2.0
 github.com/golang/protobuf/proto
