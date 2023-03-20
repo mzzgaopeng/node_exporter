@@ -35,7 +35,7 @@ var dockerclient client.APIClient
 
 func createcli() {
 	var err error
-	dockerclient, err = client.NewClientWithOpts()
+	dockerclient, err = client.NewClientWithOpts(client.WithVersion("1.27"))
 	if err != nil {
 		panic(err)
 	}
