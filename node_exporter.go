@@ -16,7 +16,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	_ "net/http/pprof"
 	"sort"
 
 	"github.com/prometheus/client_golang/prometheus"

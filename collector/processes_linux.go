@@ -11,17 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build !noprocesses
 // +build !noprocesses
 
 package collector
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/procfs"
+	"os"
 )
 
 type processCollector struct {
