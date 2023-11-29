@@ -26,8 +26,8 @@ func NewZombieInfoCollector() (Collector, error) {
 }
 
 // 根据容器id 查出容器名称
-func updateZombieInfo(zombieContainerIds []string, mapper *map[string]string) {
-	for _, zombieContainerId := range zombieContainerIds {
+func updateZombieInfo(zombieContainerIds map[string]bool, mapper *map[string]string) {
+	for zombieContainerId := range zombieContainerIds {
 		// 执行docker命令入参是容器id 获取容器名称
 		containerNameByte, err := execCommand("docker inspect --format='{{.Name}}' " + zombieContainerId)
 		if err != nil {
@@ -44,7 +44,8 @@ func (c *newZombieInfoCollector) Update(ch chan<- prometheus.Metric) error {
 
 	mapper := make(map[string]string)
 	zombieContainerIds, err := GetZombieContainerIds()
-	fmt.Printf("zombieContainerIds: %q\n", zombieContainerIds)
+	fmt.Printf("zombieContainerIds: %v\n", zombieContainerIds)
+
 	if err != nil {
 		log.Error("GetZombieContainerIds： %q", err)
 	}
@@ -68,7 +69,7 @@ func (c *newZombieInfoCollector) Update(ch chan<- prometheus.Metric) error {
 }
 
 // GetZombieContainerIds 获取所有僵尸进程的容器Id
-func GetZombieContainerIds() ([]string, error) {
+func GetZombieContainerIds() (map[string]bool, error) {
 	fs, err := procfs.NewFS(*procPath)
 	if err != nil {
 		return nil, err
@@ -93,7 +94,7 @@ func GetZombieContainerIds() ([]string, error) {
 	}
 	//获取所有僵尸进程的容器启动进程切片
 	var zombiePid int
-	var containerIds []string
+	containerIds := make(map[string]bool)
 	for _, pid := range p {
 		stat, err := pid.NewStat()
 		// PIDs can vanish between getting the list and getting stats.
@@ -114,7 +115,7 @@ func GetZombieContainerIds() ([]string, error) {
 					continue
 				}
 				if sign {
-					containerIds = append(containerIds, containerId)
+					containerIds[containerId] = true
 					break
 				} else {
 					zombiePid = processParents[zombiePid]
