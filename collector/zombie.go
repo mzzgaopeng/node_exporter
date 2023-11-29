@@ -31,9 +31,9 @@ func updateZombieInfo(zombieContainerIds map[string]bool, mapper *map[string]str
 		// 执行docker命令入参是容器id 获取容器名称
 		containerNameByte, err := execCommand("docker inspect --format='{{.Name}}' " + zombieContainerId)
 		if err != nil {
-			log.Debugf("Get 容器Pid fail: %q", err)
+			log.Debugf("Get 容器Name fail: %q", err)
 		}
-		if string(containerNameByte) != "" {
+		if string(containerNameByte) != "" && len(strings.Split(string(containerNameByte), "_")) > 4 {
 			containerStr := strings.Split(string(containerNameByte), "_")
 			(*mapper)[containerStr[2]] = containerStr[3]
 		}
@@ -143,7 +143,6 @@ func GetContainerIdByPid(pid int) (string, bool, error) {
 		//截取容器的ID 根据docker版本不同分两种情况
 		if strings.Contains(cmdline, "docker-containerd-shim\x00-namespace\x00moby\x00-workdir") {
 			containerId = cmdline[strings.LastIndex(cmdline, "moby/")+5 : strings.LastIndex(cmdline, "moby/")+17]
-			fmt.Printf("第145行代码：%s\n", containerId)
 		} else if strings.Contains(cmdline, "containerd-shim-runc-v2\x00-namespace\x00moby\x00-id") {
 			containerId = cmdline[strings.LastIndex(cmdline, "moby\x00-id")+9 : strings.LastIndex(cmdline, "moby\x00-id")+21]
 		}
