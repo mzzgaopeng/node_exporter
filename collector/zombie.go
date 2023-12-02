@@ -17,7 +17,7 @@ const (
 type newZombieInfoCollector struct{}
 
 func init() {
-	registerCollector("zombieProcessesInfo", true, NewZombieInfoCollector)
+	registerCollector("zombieProcessesInfo", defaultDisabled, NewZombieInfoCollector)
 }
 
 // NewZombieInfoCollector NewContainerdCollector returns a new Collector.
@@ -106,7 +106,7 @@ func GetZombieContainerIds() (map[string]bool, error) {
 			return nil, err
 		}
 
-		if stat.State == "Z" {
+		if stat.State == "Z" && stat.PID > 1 {
 			zombiePid = stat.PID
 			for i := 0; i < 10; i++ {
 				containerId, sign, err := GetContainerIdByPid(zombiePid)
@@ -117,7 +117,7 @@ func GetZombieContainerIds() (map[string]bool, error) {
 				if sign {
 					containerIds[containerId] = true
 					break
-				} else {
+				} else if processParents[zombiePid] > 1 {
 					zombiePid = processParents[zombiePid]
 				}
 			}
@@ -128,6 +128,10 @@ func GetZombieContainerIds() (map[string]bool, error) {
 
 // GetContainerIdByPid 根据进程号获取cmdline 并判断cmdline中是否包含容器启动命令 包含就返回容器ID和true
 func GetContainerIdByPid(pid int) (string, bool, error) {
+	var containerId string
+	if pid <= 1 {
+		return containerId, false, nil
+	}
 	cmdlinePath := filepath.Join("/proc", fmt.Sprintf("%d", pid), "cmdline")
 
 	cmdlineBytes, err := os.ReadFile(cmdlinePath)
@@ -137,7 +141,7 @@ func GetContainerIdByPid(pid int) (string, bool, error) {
 	}
 	cmdline := string(cmdlineBytes)
 	//判断cmdline是否包含containerd-shim 包含就返回true
-	var containerId string
+
 	if strings.Contains(cmdline, "containerd-shim") {
 		fmt.Printf("进程 %d 的cmdline信息：%v\n", pid, cmdline)
 		//截取容器的ID 根据docker版本不同分两种情况
