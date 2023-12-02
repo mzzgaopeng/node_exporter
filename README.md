@@ -14,6 +14,10 @@ To expose NVIDIA GPU metrics, [prometheus-dcgm
 ](https://github.com/NVIDIA/gpu-monitoring-tools/tree/master/exporters/prometheus-dcgm)
 can be used.
 
+v0.17.3 版本去掉了pprof组件
+
+v0.17.4 版本增加了僵尸进程监控功能，指标会返回父容器的名称和namespace
+
 ## Collectors
 
 There is varying support for collectors on each operating system. The tables
