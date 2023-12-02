@@ -15,6 +15,7 @@ To expose NVIDIA GPU metrics, [prometheus-dcgm
 can be used.
 
 v0.17.3 版本去掉了pprof组件
+
 v0.17.4 版本增加了僵尸进程监控功能，指标会返回父容器的名称和namespace
 
 ## Collectors
